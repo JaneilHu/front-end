@@ -122,7 +122,6 @@ complete回调：动画完成时执行的函数，这个可以保证当前动画
 .animate( properties, options )
 
 
-
 stop()：只会停止第一个动画，第二个第三个继续
 stop(true)：停止第一个、第二个和第三个动画
 stop(true ture)：停止动画，直接跳到第一个动画的最终状态
@@ -177,14 +176,13 @@ template("你","我","他")或template(["你","我","他"])则输出"你-我-他
 4、jQuery.validator.addClassRules(name,rules)：为某些class属性值包含name的元素增加验证规则（批量设置规则，可减少重复代码）
 如：$.validator.addClassRules({text:{required:true,minlength:5}});表示给class="text"的元素添加验证规则
 
-
-validate()方法配置项是validate插件的核心内容：
-submitHandler通过验证后运行的函数，可以加上表单提交方法
-invalidHandler无效表单提交后运行的函数
-ignore对某些元素不进行验证
-rules定义校验规则
-messages定义提示信息
-groups对一组元素的验证，用一个错误提示，用errorPlacement控制把出错信息放在那实例调用：
+validate()方法配置项（即 validator 对象属性）是validate插件的核心内容：
+submitHandler:通过验证后运行的函数，可以加上表单提交方法
+invalidHandler:无效表单提交后运行的函数
+ignore:对某些元素不进行验证
+rules:定义校验规则
+messages:定义提示信息
+groups:对一组元素的验证，用一个错误提示，用errorPlacement控制把出错信息放在那实例调用：
 submitHandler:function(from){
 //表单提交的方式
 from:submit();//$(form).Ajax.submit();//$ajax等方式提交表单
@@ -192,3 +190,68 @@ from:submit();//$(form).Ajax.submit();//$ajax等方式提交表单
 invalidHandler:function(event,validator){ //event:无效验证触发的事件 //validator:对象
 }也可以写一个事件来触发
 $("选择器属性值").on("事件名",function(event,validator)){
+	console.log("错误数："+validator.numberOfInvalids	());
+});
+
+onsubmit:是否在提交时验证，默认值为true
+onfoucusout:是否在获取焦时验证
+onkeyup:是否在敲击键盘时验证
+onclick:是否在鼠标点击时验证，一般用于checkbox或者radio
+focusInvalid:提交表单后，未通过验证的表单（第一个或提交之前获得焦点的未通过验证的 表单）是否会获得焦点
+focusCleanup:当未通过验证的元素获得焦点时，是否移除错误提示
+errorClass:指定错误提示的css类名，可以自定义错误提示的样式
+validClass:指定验证通过的css类名
+errorElement:使用什么标签标记错误
+wrapper：使用什么标签把上边的errorElement包起来
+errorLaberContainer:把错误信息统一放在一个容器里面
+errorContainer:显示或者隐藏验证信息，可以自动实现有错误信息出现时把容器属性变为显示，无错误时隐藏。
+
+1、showErrors：可以显示总共有多少个未通过验证的元素
+如：showErrors:function(errorMap,errorList){
+errorMap：元素信息和错误信息的键值对
+errorList：元素信息、错误信息、验证方法等信息列表
+this.defaultShowErrors();//使用默认的错误提示信息展示方式，需要这个否则错误信息不显示了
+}
+2、errorPlacement：自定义错误信息放在哪里，配合groups一起使用
+3、success：要验证的元素通过验证后的动作
+如：success:"right" 或 success:function(label){label.addClass("right")}
+效果是给错误信息展示label元素的class属性值追加right值
+4、highlight：可以给未通过验证的元素加效果
+如：highlight:function(element,errorClass,validClass){
+//element：绑定验证的元素
+//errorClass：验证错误信息展示label的class属性值
+//validClass：验证通过信息展示label的class属性值
+}
+5、unhighlight：去除未通过验证的元素的效果，一般和highlight同时使用，同上
+注意：success主要针对label元素，highlight主要针对input元素
+     highlight和unhighlight主要用在单项验证时
+
+
+validate插件自带的选择器：
+1、:blank   选择所有值为空的元素，会自动去除半角的空格，全角的空格则不为空
+2、:filled  选择所有值不为空的元素 会自动去除半角的空格，全角的空格则不为空
+3、:unchecked  选择所有没有被选中的元素
+
+
+
+自定义验证方法
+$.validator.addMethod(name,method，[message])
+name:验证方法名称，
+method:function(value(验证元素的值),element(被验证的元素),params(验证方法的值)方法逻辑
+message:提示消息
+
+eg:
+$.validator.addMethod("postcode",function(value,ele,params){
+	var postcode = /^[0-9]{6}$/;
+	return this.optional(ele)||(postcode.test(value));
+},"请填写正确的邮编！");
+代码解释：
+this.optional(element)：元素为空的话，返回 true，不为空才会接着验证postcode
+postcode.test(value)：对元素的值进行正则表达式判断，符合正则表达式返回true
+
+
+additional-methods.js包含了很多扩展验证方法。在写自定义方法时可以参考这个js库
+
+
+所有表单数据最少要验证两次，一提交潜在客户端验证，二提交后在服务器端验证，保证数据合法性。
+服务器端不要相信任何客户端的数据！
